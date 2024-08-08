@@ -1,0 +1,15 @@
+"NodeOUs:
+  Enable: true
+  AdminOUIdentifier:
+    OrganizationalUnitIdentifier: admin
+    Certificate: voteCerts/voteOrg-ca.pem
+  OrdererOUIdentifier:
+    OrganizationalUnitIdentifier: orderer
+    Certificate: voteCerts/voteOrg-ca.pem
+  PeerOUIIdentifier:
+    OrganizationalUnitIdentifier: peer
+    Certificate: voteCerts/voteOrg-ca.pem
+  ClientOUIdentifier:
+    OrganizationalUnitIdentifier: client
+    Certificate: voteCerts/voteOrg-ca.pem
+"

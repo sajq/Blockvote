@@ -1,0 +1,11 @@
+OrdererOrgs:
+  - Name: voteOrderer
+    Domain: blockvote.com
+    EnableNodeOUs: true #enable identity classification
+    Specs:
+    - Hostname: orderer
+      SANS:
+        - localhost
+    - Hostname: orderer
+      SANS:
+        - localhost

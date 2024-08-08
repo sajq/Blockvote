@@ -1,0 +1,11 @@
+PeerOrgs:
+  - Name: voteOrg1
+    Domain: voteOrg1.blockvote.com
+    MSPDir: votingOrganizations/participantOrganizations/voteOrg1.blockvote.com/msp
+    EnableNodeOUs: true #enable identity classification
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+    Users:
+      Count: 1

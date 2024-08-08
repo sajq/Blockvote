@@ -1,0 +1,34 @@
+name: voteOrg${ORG}
+version: 1.0.0
+client:
+  organization: voteOrg${ORG}
+  connection:
+    timeout:
+      peer:
+        endorser: '300'
+organizations:
+  Org${ORG}:
+    mspid: voteOrg${ORG}MSP
+    peers:
+      - participant0.voteOrg${ORG}.blockvote.com
+    certificateAuthorities:
+      - ca.voteOrg${ORG}.blockvote.com
+peers:
+  participant0.voteOrg${ORG}.blockvote.com:
+    url: grpcs://localhost:${P0PORT}
+    tlsCACerts:
+      pem: |
+        ${PEERPEM}
+    grpcOptions:
+      ssl-target-name-override: participant0.voteOrg${ORG}.blockvote.com
+      hostnameOverride: participant0.voteOrg${ORG}.blockvote.com
+certificateAuthorities:
+  ca.voteOrg${ORG}.blockvote.com:
+    url: https://localhost:${CAPORT}
+    caName: ca-voteOrg${ORG}
+    tlsCACerts:
+      pem:
+        - |
+          ${CAPEM}
+    httpOptions:
+      verify: false
