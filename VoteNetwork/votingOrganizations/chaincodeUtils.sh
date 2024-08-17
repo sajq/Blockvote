@@ -2,15 +2,22 @@
 
 function prepareChaincode(){
   ORG=$1
-  echo "test" 
+  echo "Preparing chaincode for voteOrg${ORG}..." 
   echo $CORE_PEER_MSPCONFIGPATH
   setGlobals $ORG
+  set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   if test $? -ne 0; then
-    echo "test2 $CC_NAME"
     peer lifecycle chaincode install ${CC_NAME}.tar.gz >&log.txt
+    res=$?
   fi
-  echo "Chaincode has been prepared!"
+  { set +x; } 2>/dev/null
+  cat log.txt
+  if [ $? -ne 0 ]; then
+    echo "Chaincode preparation for voteOrg${ORG} has failed."
+  else
+    echo "Chaincode has been prepared!"
+  fi
 }        
 
 function chaincodeQueryDeploy(){

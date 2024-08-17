@@ -5,22 +5,23 @@ TEST_NETWORK_HOME=${TEST_NETWORK_HOME:-${PWD}}
 
 createBaseParticipantUpdate(){
 
-  getChannelConfig $ORG $CHANNEL_NAME ${TEST_NETWORK_HOME}/votingOgranizations/channel-artifacts/${CORE_PEER_LOCALMSPID}config.json
+  getChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json
 
     if [ $ORG -eq 1 ]; then
-      HOST="participant0.voteOrg1.blockvote.com"
+      HOST="peer0.voteOrg1.blockvote.com"
       PORT=7051
     elif [ $ORG -eq 2 ]; then
-      HOST="participant0.voteOrg2.blockvote.com"
+      HOST="peer0.voteOrg2.blockvote.com"
       PORT=9051
-    else
-      HOST="participant0.voteOrg3.blockvote.com"
-      PORT=11051
     fi
 
     set -x
-   jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
-   { set +x; } 2>/dev/null
+   jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' ${TEST_NETWORK_HOME}/votingOrganizations/channel-artifacts/${CORE_PEER_LOCALMSPID}config.json > ${TEST_NETWORK_HOME}/votingOrganizations/channel-artifacts/${CORE_PEER_LOCALMSPID}modified_config.json
+  res=$?
+  { set +x; } 2>/dev/null
+  if [ $res -ne 0 ]; then
+        echo "Channel configuration update for anchor peer failed, make sure you have jq installed"
+      fi
 
     createChannelConfig ${CHANNEL_NAME} ${CORE_PEER_LOCALMSPID}config.json ${CORE_PEER_LOCALMSPID}modified_config.json ${CORE_PEER_LOCALMSPID}anchors.tx
 }

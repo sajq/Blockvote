@@ -87,13 +87,13 @@ startDockerContainer() {
   if [ "$CHAINCODE_CHANNEL_DOCKER_RUN" = "true" ]; then
     echo "Starting CAAS docker container..."
 
-    ${CONTAINER_CLI} run --rm -d --name participant0voteOrg1_${CC_NAME}_ccaas  \
+    ${CONTAINER_CLI} run --rm -d --name peer0voteOrg1_${CC_NAME}_ccaas  \
                   --network fabric_test \
                   -e CHAINCODE_SERVER_ADDRESS=0.0.0.0:${CCAAS_SERVER_PORT} \
                   -e CHAINCODE_ID=$PACKAGE_ID -e CORE_CHAINCODE_ID_NAME=$PACKAGE_ID \
                     ${CC_NAME}_ccaas_image:latest
 
-    ${CONTAINER_CLI} run  --rm -d --name participant0voteOrg2_${CC_NAME}_ccaas \
+    ${CONTAINER_CLI} run  --rm -d --name peer0voteOrg2_${CC_NAME}_ccaas \
                   --network fabric_test \
                   -e CHAINCODE_SERVER_ADDRESS=0.0.0.0:${CCAAS_SERVER_PORT} \
                   -e CHAINCODE_ID=$PACKAGE_ID -e CORE_CHAINCODE_ID_NAME=$PACKAGE_ID \

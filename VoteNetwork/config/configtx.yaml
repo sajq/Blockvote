@@ -3,7 +3,7 @@ Organizations:
   - &OrdererOrg
     Name: OrdererVoteOrg
     ID: OrdererMSP
-    MSPDir: ../votingOrganizations/orderersOrganizations/blockvote.com/msp
+    MSPDir: ../votingOrganizations/ordererOrganizations/blockvote.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -19,7 +19,7 @@ Organizations:
   - &Org1
     Name: voteOrg1MSP
     ID: voteOrg1MSP
-    MSPDir: ../votingOrganizations/participantOrganizations/voteOrg1.blockvote.com/msp
+    MSPDir: ../votingOrganizations/peerOrganizations/voteOrg1.blockvote.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -36,7 +36,7 @@ Organizations:
   - &Org2
     Name: voteOrg2MSP
     ID: voteOrg2MSP
-    MSPDir: ../votingOrganizations/participantOrganizations/voteOrg2.blockvote.com/msp
+    MSPDir: ../votingOrganizations/peerOrganizations/voteOrg2.blockvote.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -57,7 +57,7 @@ Capabilities:
   Orderer: &OrdererCapabilities
     V2_0: true
   Application: &ApplicationCapabilities
-    V2_5: true
+    V2_0: true
     
 Application: &ApplicationDefaults
   Organizations:
@@ -127,8 +127,8 @@ Profiles:
         Consenters:
           - Host: orderer.blockvote.com
             Port: 7050
-            ClientTLSCert: ../votingOrganizations/orderersOrganizations/blockvote.com/orderers/orderer.blockvote.com/tls/server.crt
-            ServerTLSCert: ../votingOrganizations/orderersOrganizations/blockvote.com/orderers/orderer.blockvote.com/tls/server.crt
+            ClientTLSCert: ../votingOrganizations/ordererOrganizations/blockvote.com/orderers/orderer.blockvote.com/tls/server.crt
+            ServerTLSCert: ../votingOrganizations/ordererOrganizations/blockvote.com/orderers/orderer.blockvote.com/tls/server.crt
       Organizations:
         - *OrdererOrg
       Capabilities: *OrdererCapabilities

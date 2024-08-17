@@ -1,9 +1,9 @@
 #!/bin/bash
 
 . votingOrganizations/envVar.sh
-. votingOrganizations/votingNetworkVariables.sh
+#. votingOrganizations/votingNetworkVariables.sh
 
-CHANNEL_NAME=$1
+CHANNEL_NAME="$1"
 DELAY=$2
 MAX_RETRY_ATTEMPTS=$3
 CHANNEL_DETAILS=$4
@@ -25,7 +25,7 @@ if [ ! -d "channel-artifacts" ]; then
 fi
 
 generateChannelsGenBlock(){
-  configureGlobalVars 1
+  #configureGlobalVars 1
   setGlobals 1
 
   local bft=$1
@@ -51,7 +51,7 @@ createChannel(){
  	local rc=1
 	local COUNTER=1
 	local bft_true=$1
-	echo "Adding orderer..."
+	echo "Adding orderers..."
 	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY_ATTEMPTS ] ; do
 		sleep $DELAY
 		set -x
@@ -61,21 +61,25 @@ createChannel(){
 		let rc=$res
 		COUNTER=$(expr $COUNTER + 1)
 	done
+	cat log.txt
 	if [ $res -ne 0 ]; then
-  	echo $res "Channel creation failed"
+  		echo $res "Channel creation failed"
+  	else
+  		
+  		echo "Channel creation successful"
 	fi
 }
 
 joinChannel(){
   ORG=$1
+  FABRIC_CFG_PATH=$PWD/config/
   setGlobals $ORG
-
   local rc=1
-  local COUNTER=1
+  local COUNTER=0
 
   while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY_ATTEMPTS ] ; do
     sleep $DELAY
-    echo "join test"
+    echo "Trying to connect voteOrg${ORG} to channel.."
     set -x
     	peer channel join -b $BLOCKFILE >&log.txt
     res=$?
@@ -83,9 +87,9 @@ joinChannel(){
     let rc=$res
     COUNTER=$(expr $COUNTER + 1)
   done
-  
+  cat log.txt
   if [ $res -ne 0 ]; then
-  	echo "After $MAX_RETRY_ATTEMPTS attempts, participant0.voteOrg${ORG} has failed to join channel '$CHANNEL_NAME' "
+  	echo "After $MAX_RETRY_ATTEMPTS attempts, peer0.voteOrg${ORG} has failed to join channel '$CHANNEL_NAME' "
   fi
 }
 
@@ -95,7 +99,7 @@ setBaseParticipant(){
 }
 
 FABRIC_CFG_PATH=./config
-BLOCKFILE=./votingOrganizations/channel-artifacts/${CHANNEL_NAME}.block
+BLOCKFILE="./votingOrganizations/channel-artifacts/${CHANNEL_NAME}.block"
 
 if [ $BYZANTINEF_TOLERANCE -eq 1 ]; then
   FABRIC_CFG_PATH=./bft-config

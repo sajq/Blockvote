@@ -1,7 +1,7 @@
 version: '3.7'
 services:
-  participant0.voteOrg1.blockvote.com:
-    container_name: participant0.voteOrg1.blockvote.com
+  peer0.voteOrg1.blockvote.com:
+    container_name: peer0.voteOrg1.blockvote.com
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric
@@ -13,8 +13,8 @@ services:
       - ./docker/peercfg:/etc/hyperledger/peercfg
       - ${DOCKER_SOCKET}:/host/var/run/docker.sock
 
-  participant0.voteOrg2.blockvote.com:
-    container_name: participant0.voteOrg2.blockvote.com
+  peer0.voteOrg2.blockvote.com:
+    container_name: peer0.voteOrg2.blockvote.com
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric

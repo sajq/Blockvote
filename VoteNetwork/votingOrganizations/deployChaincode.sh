@@ -30,7 +30,7 @@ else
   CC_COLL_CONFIG="--collections-config $CC_COLL_CONFIG"
 fi
 
-FABRIC_CFG_PATH=$PWD/votingOrganizations
+FABRIC_CFG_PATH=$PWD
 
 source ./votingOrganizations/chaincodeUtils.sh
 source ./votingOrganizations/envVar.sh
@@ -46,9 +46,9 @@ fi
 
 PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid ${CC_NAME}.tar.gz)
 
-echo "Installing chaincode on participant0.voteOrg1..."
+echo "Installing chaincode on peer0.voteOrg1..."
 prepareChaincode 1
-echo "Install chaincode on participant0.voteOrg2..."
+echo "Install chaincode on peer0.voteOrg2..."
 prepareChaincode 2
 
 resolveSequence

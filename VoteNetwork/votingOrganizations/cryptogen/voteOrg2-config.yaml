@@ -1,7 +1,7 @@
 PeerOrgs:
   - Name: voteOrg2
     Domain: voteOrg2.blockvote.com
-    MSPDir: votingOrganizations/participantOrganizations/voteOrg2.blockvote.com/msp
+    #MSPDir: votingOrganizations/participantOrganizations/voteOrg2.blockvote.com/msp
     EnableNodeOUs: true #enable identity classification
     Template:
       Count: 1

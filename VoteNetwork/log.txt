@@ -1,0 +1,1 @@
+Error: failed to endorse proposal: rpc error: code = Unknown desc = error validating proposal: access denied: channel [votechannel] creator org unknown, creator is malformed

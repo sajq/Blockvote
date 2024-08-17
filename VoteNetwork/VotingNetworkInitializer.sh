@@ -106,14 +106,14 @@ function createVotingOrganizations(){
 
     echo "Creating voting orgs..."
 
-    if [ -d "votingOrganizations/participantOrganizations" ]; then
+    if [ -d "votingOrganizations/peerOrganizations" ]; then
     	echo "Deleting existing organizations files.."
-    	rm -rf votingOrganizations/pariticpantOrganizations
-    	rm -rf votingOrganizations/orderersOrganizations
+    	rm -rf votingOrganizations/peerOrganizations
+    	rm -rf votingOrganizations/ordererOrganizations
     fi
     
     if [ ! -d "votingOrganizations/peerOrganizations/voteOrg1.blockvote.com" ]; then
-    	echo "kill me"
+    	echo "exists 0"
       fi
 	
     if [ "$CRYPTO" == "cryptogen" ]; then
@@ -157,32 +157,32 @@ function createVotingOrganizations(){
     	echo "exists 1"
       fi
       
-      if [ ! -d "votingOrganizations/participantOrganizations/voteOrg1.blockvote.com" ]; then
-        echo "Creating participant catalogues"
-    	mkdir -p votingOrganizations/participantOrganizations/voteOrg1.blockvote.com
-    	mkdir -p votingOrganizations/participantOrganizations/voteOrg2.blockvote.com
-    	mkdir -p votingOrganizations/orderersOrganizations/blockvote.com
+      #if [ ! -d "votingOrganizations/participantOrganizations/voteOrg1.blockvote.com" ]; then
+        #echo "Creating participant catalogues"
+    	#mkdir -p votingOrganizations/participantOrganizations/voteOrg1.blockvote.com
+    	#mkdir -p votingOrganizations/participantOrganizations/voteOrg2.blockvote.com
+    	#mkdir -p votingOrganizations/orderersOrganizations/blockvote.com
     	
-    	echo "Moving newly created organizations files..."
-      mv votingOrganizations/peerOrganizations/voteOrg1.blockvote.com votingOrganizations/participantOrganizations
-      mv votingOrganizations/peerOrganizations/voteOrg2.blockvote.com votingOrganizations/participantOrganizations
-      mv votingOrganizations/ordererOrganizations/blockvote.com votingOrganizations/orderersOrganizations
-      	rm -r votingOrganizations/peerOrganizations
-      	rm -r votingOrganizations/ordererOrganizations
-      fi
+    	#echo "Moving newly created organizations files..."
+      #mv votingOrganizations/peerOrganizations/voteOrg1.blockvote.com votingOrganizations/participantOrganizations
+      #mv votingOrganizations/peerOrganizations/voteOrg2.blockvote.com votingOrganizations/participantOrganizations
+      #mv votingOrganizations/ordererOrganizations/blockvote.com votingOrganizations/orderersOrganizations
+      	#rm -r votingOrganizations/peerOrganizations
+      	#rm -r votingOrganizations/ordererOrganizations
+      #fi
 
     elif [ "$CRYPTO" == "cfssl" ]; then
       . votingOrganizations/certificates.sh
       
       echo "Using cfssl"
 
-      echo "Creation of new voter and admin for organization vote0."
-      participants_certs_creation admin admin.voteOrg0.blockvote.com voteOrg0
-      participants_certs_creation participant participant10.voteOrg0.blockvote.com voteOrg0
-
       echo "Creation of new voter and admin for organization vote1."
-      participants_certs_creation admin admin.voteOrg1.blockvote.com voteOrg1
+      participants_certs_creation admin admin.voteOrg1.blockvote.com voteOrg0
       participants_certs_creation participant participant0.voteOrg1.blockvote.com voteOrg1
+
+      echo "Creation of new voter and admin for organization vote2."
+      participants_certs_creation admin admin.voteOrg2.blockvote.com voteOrg1
+      participants_certs_creation participant participant0.voteOrg2.blockvote.com voteOrg2
 
       echo "Creation of new orderer and admin for organization vote1."
       orderers_certs_creation admin admin.voteOrg1.blockvote.com
@@ -215,12 +215,12 @@ function createVotingChannel(){
   len=$(echo ${#CONTAINERS[@]})
   echo $len
 
-  if [[ $len -ge 4 ]] && [[ ! -d "votingOrganizations/participantOrganizations" ]]; then
+  if [[ $len -ge 4 ]] && [[ ! -d "votingOrganizations/peerOrganizations" ]]; then
     echo "Synchronization of certificates and containers"
     networkDown
   fi
 
-  [[ $len -lt 4 ]] || [[ ! -d "votingOrganizations/participantOrganizations" ]] && networkStatus="true" || echo "Network online."
+  [[ $len -lt 4 ]] || [[ ! -d "votingOrganizations/peerOrganizations" ]] && networkStatus="true" || echo "Network online."
 
   echo $networkStatus
   if [ $networkStatus == "true"  ]; then
@@ -236,7 +236,7 @@ function startNetwork(){
 
   checkPrerequistes
 
-  if [ ! -d "votingOrganizations/participantOrganizations" ]; then
+  if [ ! -d "votingOrganizations/peerOrganizations" ]; then
     echo "Did not found files related to any voting organization! Creating organizations files"
       createVotingOrganizations
   fi
@@ -249,7 +249,7 @@ function startNetwork(){
  
   echo "${DOCKER_SOCKET}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} 
  
-  DOCKER_SOCKET="${DOCKER_SOCKET}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up 2>&1
+  DOCKER_SOCKET="${DOCKER_SOCKET}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d 2>&1
 
   $CONTAINER_CLI ps -a
   if [ $? -ne 0 ]; then
@@ -346,12 +346,12 @@ function networkDown() {
 
   if [ "$MODE" != "restart" ]; then
 
-    ${CONTAINER_CLI} volume rm docker_orderer.blockvote.com docker_participant0.voteOrg1.blockvote.com docker_participant0.voteOrg2.blockvote.com
+    ${CONTAINER_CLI} volume rm docker_orderer.blockvote.com docker_peer0.voteOrg1.blockvote.com docker_peer0.voteOrg2.blockvote.com
 
     clearContainers
     removeUnwantedImages
 
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf system-genesis-block/*.block organizations/participantOrganizations organizations/orderersOrganization'
+    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf system-genesis-block/*.block organizations/peerOrganizations organizations/ordererOrganization'
 
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf votingOrganizations/fabric-ca/org1/msp votingOrganizations/fabric-ca/org1/tls-cert.pem votingOrganizations/fabric-ca/org1/ca-cert.pem votingOrganizations/fabric-ca/org1/IssuerPublicKey votingOrganizations/fabric-ca/org1/IssuerRevocationPublicKey votingOrganizations/fabric-ca/org1/fabric-ca-server.db'
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf votingOrganizations/fabric-ca/org2/msp votingOrganizations/fabric-ca/org2/tls-cert.pem votingOrganizations/fabric-ca/org2/ca-cert.pem votingOrganizations/fabric-ca/org2/IssuerPublicKey votingOrganizations/fabric-ca/org2/IssuerRevocationPublicKey votingOrganizations/fabric-ca/org2/fabric-ca-server.db'
@@ -512,7 +512,7 @@ if [ $BIZANTINE_FAULT_TOLERANCE -eq 1 ]; then
   COMPOSE_FILE_BASE=compose-bft-vote-net.yaml
 fi
 
-if [ ! -d "votingOrganizations/participantOrganizations" ]; then
+if [ ! -d "votingOrganizations/peerOrganizations" ]; then
   CRYPTO_MODE="with crypto from '${CRYPTO}'"
 else
   CRYPTO_MODE=""
