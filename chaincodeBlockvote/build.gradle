@@ -6,10 +6,15 @@
  * User Manual available at https://docs.gradle.org/6.5/userguide/tutorial_java_projects.html
  */
 plugins {
-    // Apply the application plugin to add support for building a CLI application.
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'application'
-    
+    id 'checkstyle'
+    id 'jacoco'
 }
+
+group 'org.hyperledger.fabric.samples'
+version '1.0-SNAPSHOT'
+
 ext {
    javaMainClass = "src.main.java.Gateway.VoteGateway"
 }
@@ -32,6 +37,13 @@ dependencies {
     implementation 'com.owlike:genson:1.6'
 }
 
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://jitpack.io'
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
@@ -39,6 +51,57 @@ java {
 }
 
 application {
-    // Define the main class for the application.
-    mainClass = 'Gateway.VoteGateway'
+    mainClass = 'org.hyperledger.fabric.contract.ContractRouter'
 }
+
+checkstyle {
+    toolVersion '8.21'
+    configFile file("config/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source ='src/main/java'
+}
+
+checkstyleTest {
+    source ='src/test/java'
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.9
+            }
+        }
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+mainClassName = 'org.hyperledger.fabric.contract.ContractRouter'
+
+shadowJar {
+    archiveBaseName = 'chaincode'
+    archiveVersion = ''
+    archiveClassifier = ''
+    mergeServiceFiles()
+
+    manifest {
+        attributes 'Main-Class': 'org.hyperledger.fabric.contract.ContractRouter'
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+installDist.dependsOn check

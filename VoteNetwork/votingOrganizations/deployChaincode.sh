@@ -12,8 +12,8 @@ CC_COLL_CONFIG=${9:-"NA"}
 DELAY=${10:-"3"}
 MAX_RETRY=${11:-"5"}
 VERBOSE=${12:-"false"}
-INIT_REQUIRED="--init-required"
 
+INIT_REQUIRED="--init-required"
 if [ "$CC_INIT_FCN" = "NA" ]; then
   INIT_REQUIRED=""
 fi
@@ -42,7 +42,7 @@ if [[ $? -ne 0 ]]; then
  exit 1
 fi
 
-./votingOrganizations/chaincodePackage.sh $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION false
+./votingOrganizations/chaincodePackage.sh $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION
 
 PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid ${CC_NAME}.tar.gz)
 

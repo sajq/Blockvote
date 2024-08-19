@@ -1,4 +1,4 @@
-package SmartContracts;
+package org.hyperledger.fabric.samples.assettransfer;
 
 import com.owlike.genson.Genson;
 
@@ -37,56 +37,51 @@ public final class VoteSubmission implements ContractInterface {
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void ChainStarterVotes(Context context)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public void ChainStarterVotes(final Context context) {
+        ChaincodeStub chaincodeStub = context.getStub();
 
-        submitVote(context,"vote1","voter1",Date.from(Instant.now()));
+        submitVote(context, "vote1", "voter1", Date.from(Instant.now()).toString());
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public Vote submitVote(Context context, String voteID, String voterID, Date voteDate)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public Vote submitVote(final Context context, final String voteID, final String voterID, final String voteDate) {
+        ChaincodeStub chaincodeStub = context.getStub();
 
         /*if(voterAlreadyVoted(voteID,voterID))
         {
 
         }*/
 
-        Vote vote = new Vote(voteID,voterID,voteDate);
-        chaincodeStub.putStringState(voteID,gs.serialize(vote));
+        Vote vote = new Vote(voteID, voterID, voteDate);
+        chaincodeStub.putStringState(voteID, gs.serialize(vote));
 
         return vote;
     }
 
     @Transaction(intent = Transaction.TYPE.EVALUATE)
-    public Vote getVote(Context context, String voteID)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public Vote getVote(final Context context, final String voteID) {
+        ChaincodeStub chaincodeStub = context.getStub();
         String voteJSON = chaincodeStub.getStringState(voteID);
 
         //check if vote exists
 
-        return gs.deserialize(voteJSON,Vote.class);
+        return gs.deserialize(voteJSON, Vote.class);
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public Vote updateVote(Context context, String voteID, String voterID, Date voteDate)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public Vote updateVote(final Context context, final String voteID, final String voterID, final String voteDate) {
+        ChaincodeStub chaincodeStub = context.getStub();
 
         //check if vote exists
 
-        Vote vote = new Vote(voteID,voterID,voteDate);
-        chaincodeStub.putStringState(voteID,gs.serialize(vote));
+        Vote vote = new Vote(voteID, voterID, voteDate);
+        chaincodeStub.putStringState(voteID, gs.serialize(vote));
         return vote;
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void deleteVote(Context context, String voteID)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public void deleteVote(final Context context, final String voteID) {
+        ChaincodeStub chaincodeStub = context.getStub();
 
         //check if vote exists
 
@@ -94,26 +89,25 @@ public final class VoteSubmission implements ContractInterface {
     }
 
     @Transaction(intent = Transaction.TYPE.EVALUATE)
-    public String getAllVotes(Context context)
-    {
-        ChaincodeStub chaincodeStub=context.getStub();
+    public String getAllVotes(final Context context) {
+        ChaincodeStub chaincodeStub = context.getStub();
 
-        List<Vote> votes=new ArrayList<Vote>();
-        QueryResultsIterator<KeyValue> queryResults = chaincodeStub.getStateByRange("","");
+        List<Vote> votes = new ArrayList<Vote>();
+        QueryResultsIterator<KeyValue> queryResults = chaincodeStub.getStateByRange("", "");
 
-        for(KeyValue kv:queryResults){
-            votes.add(gs.deserialize(kv.getStringValue(),Vote.class));
+        for (KeyValue kv:queryResults) {
+            votes.add(gs.deserialize(kv.getStringValue(), Vote.class));
         }
 
         System.out.println(votes);
         return gs.serialize(votes);
     }
 
-    public boolean voteExists(Context context, String voteID){
+    public boolean voteExists(final Context context, final String voteID) {
 
         // add vote campaign check
 
-        ChaincodeStub chaincodeStub=context.getStub();
+        ChaincodeStub chaincodeStub = context.getStub();
         String voteJSON = chaincodeStub.getStringState(voteID);
         return (voteJSON != null && !voteJSON.isEmpty());
     }

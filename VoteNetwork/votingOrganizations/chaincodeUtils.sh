@@ -22,18 +22,37 @@ function prepareChaincode(){
 
 function chaincodeQueryDeploy(){
   ORG=$1
+  set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
-  echo "Query deployed!"
+  res=$?
+  { set +x; } 2>/dev/null
+  cat log.txt
+  if [ $? -ne 0 ]; then
+    echo "Query not deployed"
+  else
+    echo "Query deployed!"
+  fi
 }
 
 function chaincodeDefApprove(){
   ORG=$1
+  setGlobals $ORG
+  set -x
   peer lifecycle chaincode approveformyorg -o localhost:7050 --ordererTLSHostnameOverride orderer.blockvote.com --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
-  echo "Chaincode definition approved!"
+  res=$?
+  { set +x; } 2>/dev/null
+  cat log.txt
+  if [ $res -ne 0 ]; then
+    echo "Chaincode definition not approved"
+  else
+    echo "Chaincode definition approved!"
+  fi
 }
 
 function commitTest(){
   ORG=$1
+  shift 1
+  setGlobals $ORG
   local rc=1
   local COUNTER=1
 
@@ -44,17 +63,16 @@ function commitTest(){
       set -x
       peer lifecycle chaincode checkcommitreadiness --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} --output json >&log.txt
       res=$?
+      echo $res
+      cat log.txt
       { set +x; } 2>/dev/null
       let rc=0
-      echo $rc
-      echo $@
       for var in "$@"; do
         grep "$var" log.txt &>/dev/null || let rc=1
       done
-      echo $rc
       COUNTER=$(expr $COUNTER + 1)
     done
-
+    cat log.txt
     if test $rc -eq 0; then
       echo "Commit successful."
     else
@@ -70,16 +88,23 @@ function chaincodeDefCommit(){
 
 function queryCommit() {
   ORG=$1
-
+  setGlobals $ORG
+ 
+  EXPECTED_RESULT="Version: ${CC_VERSION}, Sequence: ${CC_SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
   local rc=1
   local COUNTER=1
 
   while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ]; do
     sleep $DELAY
+    set -x
     peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name ${CC_NAME} >&log.txt
+    res=$?
+    { set +x; } 2>/dev/null
+    test $res -eq 0 && VALUE=$(cat log.txt | grep -o '^Version: '$CC_VERSION', Sequence: [0-9]*, Endorsement Plugin: escc, Validation Plugin: vscc')
+    test "$VALUE" = "$EXPECTED_RESULT" && let rc=0
     COUNTER=$(expr $COUNTER + 1)
   done
-
+  cat log.txt
   if test $rc -eq 0; then
     echo "Query commited"
   else
