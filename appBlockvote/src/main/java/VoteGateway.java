@@ -132,6 +132,15 @@ public final class VoteGateway {
             throw e;
         }
     }*/
+    
+    private String JSONToString(final byte[] json) {
+		return JSONToString(new String(json, StandardCharsets.UTF_8));
+	}
+
+    private String JSONToString(final String json) {
+		var parsedJson = JsonParser.parseString(json);
+		return gs.toJson(parsedJson);
+	}
 
     private void initializeVoteLedger() throws EndorseException, CommitException, SubmitException, CommitStatusException {
         System.out.println("Initializing ledger...");
@@ -154,7 +163,7 @@ public final class VoteGateway {
     private void getVote(String voteID) throws GatewayException {
         System.out.println("Retrieving vote...");
         var evaluateResult = gatewayContract.evaluateTransaction("getVote",voteID);
-        System.out.println(evaluateResult);
+        System.out.println(JSONToString(evaluateResult));
     }
 
     private void updateVote(String voteID, String voterID){
@@ -172,7 +181,7 @@ public final class VoteGateway {
     private void getAllVotes() throws GatewayException {
         System.out.println("Retrieving all votes...");
         var result = gatewayContract.evaluateTransaction("getAllVotes");
-	System.out.println(result);
+	System.out.println(JSONToString(result));
         //return Base64.getEncoder().encodeToString(gatewayContract.evaluateTransaction("getAllVotes"));
     }
 
