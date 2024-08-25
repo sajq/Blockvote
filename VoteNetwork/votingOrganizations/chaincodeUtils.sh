@@ -152,6 +152,8 @@ function resolveSequence() {
   if [[ "${CC_SEQUENCE}" != "auto" ]]; then
     return 0
   fi
+  
+  MAX_RETRY=3
 
   local rc=1
   local COUNTER=1

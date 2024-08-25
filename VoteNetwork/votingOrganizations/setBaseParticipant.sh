@@ -27,7 +27,12 @@ createBaseParticipantUpdate(){
 }
 
 updateAnchorPeer() {
-  peer channel update -o localhost:7050 --ordererTLSHostnameOverride orderer.blockvote.com -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
+  peer channel update -o localhost:7050 --ordererTLSHostnameOverride orderer.blockvote.com -c $CHANNEL_NAME -f ${TEST_NETWORK_HOME}/votingOrganizations/channel-artifacts/${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
+  res=$?
+  cat log.txt
+if [ $res -ne 0 ]; then
+        echo "Base peer update failed"
+      fi
 }
 
 ORG=$1

@@ -1,2 +1,0 @@
-Committed chaincode definition for chaincode 'BlockVote' on channel 'votechannel20':
-Version: 1.0.1, Sequence: 2, Endorsement Plugin: escc, Validation Plugin: vscc, Approvals: [voteOrg1MSP: true, voteOrg2MSP: true]

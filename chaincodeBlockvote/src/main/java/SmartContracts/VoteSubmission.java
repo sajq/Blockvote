@@ -12,13 +12,13 @@ import org.hyperledger.fabric.shim.ChaincodeStub;
 import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
 
-import java.time.Instant;
+//import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
+//import java.util.Date;
 import java.util.List;
 
 @Contract(
-        name = "Vote Submission Contract",
+        name = "BlockVote",
         info = @Info(
                 title = "Vote Submission",
                 description = "Vote submission class",
@@ -32,15 +32,16 @@ public final class VoteSubmission implements ContractInterface {
     private final Genson gs = new Genson();
 
     private enum VoteTransferErrors {
+        VOTE_NOT_FOUND,
         ALREADY_VOTED,
         VOTING_CAMPAIGN_NOT_STARTED
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void ChainStarterVotes(final Context context) {
+    public void InitLedger(final Context context) {
         ChaincodeStub chaincodeStub = context.getStub();
 
-        submitVote(context, "vote1", "voter1", Date.from(Instant.now()).toString());
+        submitVote(context, "vote1", "voter1", "12-08-2024");
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)

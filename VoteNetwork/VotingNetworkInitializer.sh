@@ -360,6 +360,13 @@ function networkDown() {
 
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf channel-artifacts log.txt *.tar.gz'
   fi
+  
+  docker stop $(docker ps -aq)
+  docker rm $(docker ps -aq)
+  docker network prune -f
+  docker volume rm $(docker volume ls --filter dangling=true -q)
+  docker rmi -f $(docker images --filter dangling=true -qa)
+  docker rmi -f $(docker images -qa)
 }
 
 . ./network.config

@@ -12,7 +12,7 @@ peer:
 
     # The peer id provides a name for this peer instance and is used when
     # naming docker resources.
-    id: jdoe
+    id: blockvote
 
     # The networkId allows for logical separation of networks and is used when
     # naming docker resources.

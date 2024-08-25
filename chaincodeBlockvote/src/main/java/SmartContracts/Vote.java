@@ -1,10 +1,11 @@
 package org.hyperledger.fabric.samples.assettransfer;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
+
 import org.hyperledger.fabric.contract.annotation.DataType;
 import org.hyperledger.fabric.contract.annotation.Property;
 
-import java.util.Objects;
+import com.owlike.genson.annotation.JsonProperty;
 
 @DataType()
 public final class Vote {
