@@ -1,10 +1,8 @@
 package org.hyperledger.fabric.samples.assettransfer;
 
 import java.util.Objects;
-
 import org.hyperledger.fabric.contract.annotation.DataType;
 import org.hyperledger.fabric.contract.annotation.Property;
-
 import com.owlike.genson.annotation.JsonProperty;
 
 @DataType()
@@ -38,6 +36,11 @@ public final class Vote {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(getVoteID(), getVoterID(), getVoteDate());
+    }
+
+    @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
@@ -52,11 +55,6 @@ public final class Vote {
         return Objects.deepEquals(
                 new String[] {getVoteID(), getVoterID(), getVoteDate()},
                 new String[] {other.getVoteID(), other.getVoterID(), other.getVoteDate()});
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getVoteID(), getVoterID(), getVoteDate());
     }
 
     @Override

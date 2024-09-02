@@ -1,20 +1,16 @@
 package org.hyperledger.fabric.samples.assettransfer;
 
-import com.owlike.genson.Genson;
-
-import org.hyperledger.fabric.contract.Context;
-import org.hyperledger.fabric.contract.ContractInterface;
-import org.hyperledger.fabric.contract.annotation.Contract;
-import org.hyperledger.fabric.contract.annotation.Default;
-import org.hyperledger.fabric.contract.annotation.Info;
-import org.hyperledger.fabric.contract.annotation.Transaction;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
-
-//import java.time.Instant;
+import org.hyperledger.fabric.contract.Context;
+import org.hyperledger.fabric.contract.ContractInterface;
+import org.hyperledger.fabric.contract.annotation.Contract;
+import org.hyperledger.fabric.contract.annotation.Info;
+import org.hyperledger.fabric.contract.annotation.Transaction;
+import org.hyperledger.fabric.contract.annotation.Default;
+import com.owlike.genson.Genson;
 import java.util.ArrayList;
-//import java.util.Date;
 import java.util.List;
 
 @Contract(
@@ -29,18 +25,17 @@ import java.util.List;
 @Default
 public final class VoteSubmission implements ContractInterface {
 
-    private final Genson gs = new Genson();
-
     private enum VoteTransferErrors {
         VOTE_NOT_FOUND,
         ALREADY_VOTED,
         VOTING_CAMPAIGN_NOT_STARTED
     }
 
+    private final Genson genson = new Genson();
+
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public void InitLedger(final Context context) {
         ChaincodeStub chaincodeStub = context.getStub();
-
         submitVote(context, "vote1", "voter1", "12-08-2024");
     }
 
@@ -54,7 +49,7 @@ public final class VoteSubmission implements ContractInterface {
         }*/
 
         Vote vote = new Vote(voteID, voterID, voteDate);
-        chaincodeStub.putStringState(voteID, gs.serialize(vote));
+        chaincodeStub.putStringState(voteID, genson.serialize(vote));
 
         return vote;
     }
@@ -66,7 +61,7 @@ public final class VoteSubmission implements ContractInterface {
 
         //check if vote exists
 
-        return gs.deserialize(voteJSON, Vote.class);
+        return genson.deserialize(voteJSON, Vote.class);
     }
 
     @Transaction(intent = Transaction.TYPE.SUBMIT)
@@ -76,17 +71,16 @@ public final class VoteSubmission implements ContractInterface {
         //check if vote exists
 
         Vote vote = new Vote(voteID, voterID, voteDate);
-        chaincodeStub.putStringState(voteID, gs.serialize(vote));
+        chaincodeStub.putStringState(voteID, genson.serialize(vote));
         return vote;
     }
 
-    @Transaction(intent = Transaction.TYPE.SUBMIT)
-    public void deleteVote(final Context context, final String voteID) {
+    @Transaction(intent = Transaction.TYPE.EVALUATE)
+    public boolean voteExists(final Context context, final String voteID) {
+
         ChaincodeStub chaincodeStub = context.getStub();
-
-        //check if vote exists
-
-        chaincodeStub.delState(voteID);
+        String voteJSON = chaincodeStub.getStringState(voteID);
+        return (!voteJSON.isEmpty() && voteJSON != null);
     }
 
     @Transaction(intent = Transaction.TYPE.EVALUATE)
@@ -97,20 +91,11 @@ public final class VoteSubmission implements ContractInterface {
         QueryResultsIterator<KeyValue> queryResults = chaincodeStub.getStateByRange("", "");
 
         for (KeyValue kv:queryResults) {
-            votes.add(gs.deserialize(kv.getStringValue(), Vote.class));
+            votes.add(genson.deserialize(kv.getStringValue(), Vote.class));
         }
 
         System.out.println(votes);
-        return gs.serialize(votes);
-    }
-
-    public boolean voteExists(final Context context, final String voteID) {
-
-        // add vote campaign check
-
-        ChaincodeStub chaincodeStub = context.getStub();
-        String voteJSON = chaincodeStub.getStringState(voteID);
-        return (voteJSON != null && !voteJSON.isEmpty());
+        return genson.serialize(votes);
     }
 
 }

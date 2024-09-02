@@ -1,49 +1,49 @@
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
-import io.grpc.Grpc;
-import io.grpc.ManagedChannel;
-import io.grpc.TlsChannelCredentials;
-import org.hyperledger.fabric.client.CommitException;
-import org.hyperledger.fabric.client.CommitStatusException;
+import com.google.gson.GsonBuilder;
 import org.hyperledger.fabric.client.Contract;
 import org.hyperledger.fabric.client.EndorseException;
+import org.hyperledger.fabric.client.CommitException;
+import org.hyperledger.fabric.client.CommitStatusException;
 import org.hyperledger.fabric.client.Gateway;
 import org.hyperledger.fabric.client.GatewayException;
 import org.hyperledger.fabric.client.SubmitException;
-import org.hyperledger.fabric.client.identity.Identities;
-import org.hyperledger.fabric.client.identity.Identity;
 import org.hyperledger.fabric.client.identity.Signer;
 import org.hyperledger.fabric.client.identity.Signers;
+import org.hyperledger.fabric.client.identity.Identity;
+import org.hyperledger.fabric.client.identity.Identities;
 import org.hyperledger.fabric.client.identity.X509Identity;
-
+import java.security.cert.X509Certificate;
+import java.security.PrivateKey;
+import java.util.Base64;
+import io.grpc.Grpc;
+import io.grpc.TlsChannelCredentials;
+import io.grpc.ManagedChannel;
+import java.security.InvalidKeyException;
+import java.security.cert.CertificateException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.cert.CertificateException;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 public final class VoteGateway {
 
-    private static final String MSP = System.getenv().getOrDefault("MSP_ID", "voteOrg1MSP"); /**get info from environment of server regarding Membership Service Provider ID**/
-    private static final String VoteChannel = System.getenv().getOrDefault("CHANNEL_NAME", "votechannel");
     private static final String VoteChaincode = System.getenv().getOrDefault("CHAINCODE_NAME", "BlockVote");
-
     private static final Path VOTE_CRYPT_PATH = Paths.get("../VoteNetwork/votingOrganizations/peerOrganizations/voteOrg1.blockvote.com");
     private static final Path CERT_PATH = VOTE_CRYPT_PATH.resolve(Paths.get("users/User1@voteOrg1.blockvote.com/msp/signcerts"));
     private static final Path VOTE_KEYS = VOTE_CRYPT_PATH.resolve(Paths.get("users/User1@voteOrg1.blockvote.com/msp/keystore"));
     private static final Path TLS_CERT = VOTE_CRYPT_PATH.resolve(Paths.get("peers/peer0.voteOrg1.blockvote.com/tls/ca.crt"));
-
+    private static final String MSP = System.getenv().getOrDefault("MSP_ID", "voteOrg1MSP");
     private static final String voteEndpoint="localhost:7051";
     private static final String voteLeader="peer0.voteOrg1.blockvote.com";
+    private final String testVoteID = "voteGateway-"+ Instant.now();
+    private static final String VoteChannel = System.getenv().getOrDefault("CHANNEL_NAME", "votechannel");
 
     private final Contract gatewayContract;
-    private final String testVoteID = "voteGateway-"+ Instant.now();
-    private final Gson gs = new GsonBuilder().setPrettyPrinting().create();
+    private final Gson genson = new GsonBuilder().setPrettyPrinting().create();
 
     public VoteGateway(final Gateway gateway) throws GatewayException, CommitException
     {
@@ -55,35 +55,24 @@ public final class VoteGateway {
 
     public static void main(final String[] args) throws Exception {
 
-        ManagedChannel managedChannel = createVoteChannel();
-
-        var gatewayBuilder = Gateway.newInstance().identity(voteIndentity()).signer(getVoteSigner()).connection(managedChannel)
-				// Default timeouts for different gRPC calls
-				.evaluateOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
-				.endorseOptions(options -> options.withDeadlineAfter(15, TimeUnit.SECONDS))
-				.submitOptions(options -> options.withDeadlineAfter(5, TimeUnit.SECONDS))
-				.commitStatusOptions(options -> options.withDeadlineAfter(1, TimeUnit.MINUTES)); //org.hyperledger.fabric.client.Gateway.newInstance().identity(voteIndentity()).signer(getVoteSigner()).connection(managedChannel);
-
+        ManagedChannel votingChannel = createVoteChannel();
+	var gatewayBuilder=Gateway.newInstance().identity(voteIndentity()).signer(getVoteSigner()).connection(votingChannel);
 
         try(Gateway voteGateway = gatewayBuilder.connect())
         {
             System.out.println("test2");
             new VoteGateway(voteGateway).run();
         }finally {
-            managedChannel.shutdown();
+            votingChannel.shutdown();
         }
 
     }
 
     public void run() throws GatewayException, CommitException {
         initializeVoteLedger();
-
         submitVote(testVoteID,"1");
-
         getVote(testVoteID);
-
         updateVote(testVoteID,"2");
-
         getAllVotes();
     }
 
@@ -92,19 +81,9 @@ public final class VoteGateway {
     }
 
     public static Identity voteIndentity() throws IOException, CertificateException {
-    try (var certReader = Files.newBufferedReader(getFirstFilePath(CERT_PATH))) {
-			var voteCertificate = Identities.readX509Certificate(certReader);
-			return new X509Identity(MSP, voteCertificate);
-		}
-        //return new X509Identity(MSP,getVotingCertificate());
+        return new X509Identity(MSP,getVotingCertificate());
     }
-    
-    private static Path getFirstFilePath(Path dirPath) throws IOException {
-		try (var keyFiles = Files.list(dirPath)) {
-			return keyFiles.findFirst().orElseThrow();
-		}
-	}
-/*
+
     private static X509Certificate getVotingCertificate() throws IOException, CertificateException {
         try{
             return Identities.readX509Certificate(Files.newBufferedReader(Files.list(CERT_PATH).findFirst().orElseThrow()));
@@ -113,16 +92,12 @@ public final class VoteGateway {
             System.out.println("Error in reading certificate");
             throw e;
         }
-    }*/
+    }
 
     public static Signer getVoteSigner() throws IOException, InvalidKeyException {
-    try (var keyReader = Files.newBufferedReader(getFirstFilePath(VOTE_KEYS))) {
-			var privateKey = Identities.readPrivateKey(keyReader);
-			return Signers.newPrivateKeySigner(privateKey);
-		}
-        //return Signers.newPrivateKeySigner(getVotingPrivateKey());
+        return Signers.newPrivateKeySigner(getVotingPrivateKey());
     }
-/*
+
     private static PrivateKey getVotingPrivateKey() throws IOException, InvalidKeyException {
         try{
             return Identities.readPrivateKey(Files.newBufferedReader(Files.list(VOTE_KEYS).findFirst().orElseThrow()));
@@ -131,7 +106,7 @@ public final class VoteGateway {
             System.out.println("Error in reading private key");
             throw e;
         }
-    }*/
+    }
     
     private String JSONToString(final byte[] json) {
 		return JSONToString(new String(json, StandardCharsets.UTF_8));
@@ -139,11 +114,11 @@ public final class VoteGateway {
 
     private String JSONToString(final String json) {
 		var parsedJson = JsonParser.parseString(json);
-		return gs.toJson(parsedJson);
+		return genson.toJson(parsedJson);
 	}
 
     private void initializeVoteLedger() throws EndorseException, CommitException, SubmitException, CommitStatusException {
-        System.out.println("Initializing ledger...");
+        System.out.println("Adding test data to ledger...");
         try{
         gatewayContract.submitTransaction("InitLedger");
         } catch(Exception e){
@@ -151,7 +126,7 @@ public final class VoteGateway {
           e.printStackTrace();
           throw e;
         }
-        System.out.println("Ledger initialized!");
+        System.out.println("Test data submited into ledger!");
     }
 
     private void submitVote(String voteID, String voterID) throws EndorseException, CommitException, SubmitException, CommitStatusException {
@@ -167,7 +142,6 @@ public final class VoteGateway {
     }
 
     private void updateVote(String voteID, String voterID){
-        /**check if voting campaign is still valid**/
         try{
             System.out.println("Updating vote...");
             gatewayContract.submitTransaction("updateVote",voteID,voterID, Instant.now().toString());
@@ -179,10 +153,7 @@ public final class VoteGateway {
     }
 
     private void getAllVotes() throws GatewayException {
-        System.out.println("Retrieving all votes...");
-        var result = gatewayContract.evaluateTransaction("getAllVotes");
-	System.out.println(JSONToString(result));
-        //return Base64.getEncoder().encodeToString(gatewayContract.evaluateTransaction("getAllVotes"));
+        System.out.println("Retrieving all votes..."); System.out.println(JSONToString(gatewayContract.evaluateTransaction("getAllVotes")));
     }
 
 }
